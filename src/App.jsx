@@ -8,16 +8,24 @@ function App() {
   const [editingId, setEditingId] = useState(null);
   const [completed, setCompleted] = useState(false);
 
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
   const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
+    setLoading(true);
+
     fetch(API_URL)
       .then((res) => res.json())
-      .then((data) => setTasks(data));
+      .then((data) => setTasks(data))
+      .catch(() => alert("Erro ao carregar tarefas"))
+      .finally(() => setLoading(false));
   }, []);
 
   function handleCreateOrUpdate(e) {
     e.preventDefault();
+    setSaving(true);
 
     const payload = {
       title,
@@ -40,7 +48,9 @@ function App() {
             )
           );
           resetForm();
-        });
+        })
+        .catch(() => alert("Erro ao atualizar tarefa"))
+        .finally(() => setSaving(false));
       return;
     }
 
@@ -54,7 +64,9 @@ function App() {
       .then((newTask) => {
         setTasks([...tasks, newTask]);
         resetForm();
-      });
+      })
+      .catch(() => alert("Erro ao criar tarefa"))
+      .finally(() => setSaving(false));
   }
 
   function handleEdit(task) {
@@ -65,6 +77,8 @@ function App() {
   }
 
   function toggleCompleted(task) {
+    setSaving(true);
+
     fetch(`${API_URL}/${task.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -79,13 +93,20 @@ function App() {
         setTasks(
           tasks.map((t) => (t.id === task.id ? updatedTask : t))
         );
-      });
+      })
+      .catch(() => alert("Erro ao alterar status"))
+      .finally(() => setSaving(false));
   }
 
   function handleDelete(id) {
-    fetch(`${API_URL}/${id}`, { method: "DELETE" }).then(() => {
-      setTasks(tasks.filter((task) => task.id !== id));
-    });
+    setSaving(true);
+
+    fetch(`${API_URL}/${id}`, { method: "DELETE" })
+      .then(() => {
+        setTasks(tasks.filter((task) => task.id !== id));
+      })
+      .catch(() => alert("Erro ao deletar tarefa"))
+      .finally(() => setSaving(false));
   }
 
   function resetForm() {
@@ -93,6 +114,10 @@ function App() {
     setDescription("");
     setCompleted(false);
     setEditingId(null);
+  }
+
+  if (loading) {
+    return <p style={{ textAlign: "center" }}>Carregando tarefas...</p>;
   }
 
   return (
@@ -106,6 +131,7 @@ function App() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
+          disabled={saving}
         />
 
         <input
@@ -114,14 +140,24 @@ function App() {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           required
+          disabled={saving}
         />
 
-        <button type="submit">
-          {editingId ? "Salvar alterações" : "Adicionar"}
+        <button type="submit" disabled={saving}>
+          {saving
+            ? "Salvando..."
+            : editingId
+            ? "Salvar alterações"
+            : "Adicionar"}
         </button>
 
         {editingId && (
-          <button type="button" className="cancel" onClick={resetForm}>
+          <button
+            type="button"
+            className="cancel"
+            onClick={resetForm}
+            disabled={saving}
+          >
             Cancelar
           </button>
         )}
@@ -139,6 +175,7 @@ function App() {
                   type="checkbox"
                   checked={task.completed}
                   onChange={() => toggleCompleted(task)}
+                  disabled={saving}
                 />
                 <span className="checkmark"></span>
               </label>
@@ -150,8 +187,12 @@ function App() {
             </div>
 
             <div className="actions">
-              <button onClick={() => handleEdit(task)}>✏️</button>
-              <button onClick={() => handleDelete(task.id)}>❌</button>
+              <button onClick={() => handleEdit(task)} disabled={saving}>
+                ✏️
+              </button>
+              <button onClick={() => handleDelete(task.id)} disabled={saving}>
+                ❌
+              </button>
             </div>
           </li>
         ))}
