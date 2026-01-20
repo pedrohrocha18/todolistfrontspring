@@ -33,7 +33,6 @@ function App() {
       completed,
     };
 
-    // EDITAR
     if (editingId) {
       fetch(`${API_URL}/${editingId}`, {
         method: "PUT",
@@ -54,7 +53,6 @@ function App() {
       return;
     }
 
-    // CRIAR
     fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -117,7 +115,12 @@ function App() {
   }
 
   if (loading) {
-    return <p style={{ textAlign: "center" }}>Carregando tarefas...</p>;
+    return (
+      <div className="loader-container">
+        <div className="loader"></div>
+        <p>Carregando tarefas...</p>
+      </div>
+    );
   }
 
   return (
