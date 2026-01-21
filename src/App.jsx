@@ -118,7 +118,7 @@ function App() {
     return (
       <div className="loader-container">
         <div className="loader"></div>
-        <p>Carregando tarefas...</p>
+        <p>Carregando aplicação...</p>
       </div>
     );
   }
