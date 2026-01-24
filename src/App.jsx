@@ -17,7 +17,17 @@ function App() {
     setLoading(true);
 
     fetch(API_URL)
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 404) {
+          return [];
+        }
+
+        if (!res.ok) {
+          throw new Error("Erro ao buscar tarefas");
+        }
+
+        return res.json();
+      })
       .then((data) => setTasks(data))
       .catch(() => alert("Erro ao carregar tarefas"))
       .finally(() => setLoading(false));
@@ -42,9 +52,7 @@ function App() {
         .then((res) => res.json())
         .then((updatedTask) => {
           setTasks(
-            tasks.map((task) =>
-              task.id === editingId ? updatedTask : task
-            )
+            tasks.map((task) => (task.id === editingId ? updatedTask : task)),
           );
           resetForm();
         })
@@ -88,9 +96,7 @@ function App() {
     })
       .then((res) => res.json())
       .then((updatedTask) => {
-        setTasks(
-          tasks.map((t) => (t.id === task.id ? updatedTask : t))
-        );
+        setTasks(tasks.map((t) => (t.id === task.id ? updatedTask : t)));
       })
       .catch(() => alert("Erro ao alterar status"))
       .finally(() => setSaving(false));
@@ -150,8 +156,8 @@ function App() {
           {saving
             ? "Salvando..."
             : editingId
-            ? "Salvar alterações"
-            : "Adicionar"}
+              ? "Salvar alterações"
+              : "Adicionar"}
         </button>
 
         {editingId && (
@@ -168,10 +174,7 @@ function App() {
 
       <ul className="task-list">
         {tasks.map((task) => (
-          <li
-            key={task.id}
-            className={`task ${task.completed ? "done" : ""}`}
-          >
+          <li key={task.id} className={`task ${task.completed ? "done" : ""}`}>
             <div className="task-left">
               <label className="custom-checkbox">
                 <input
